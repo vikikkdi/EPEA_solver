@@ -8,6 +8,8 @@
 namespace mapf_adapters{
 	class mapf{
 	public:
+		mapf(){}
+		
 		mapf(int x_dim, int y_dim, std::vector<std::pair<int, int> > obstacles, std::vector<std::pair<int, int> > goals):
 			x_dim(x_dim),
 			y_dim(y_dim),
@@ -18,6 +20,7 @@ namespace mapf_adapters{
 
 		int get_x(){	return x_dim;	}
 		int get_y(){	return y_dim;	}
+		int get_size(){	return goals.size();	}
 		std::vector<std::pair<int, int> > get_obstacles(){	return obstacles;	}
 		std::vector<std::pair<int, int> > get_goals(){	return goals;	}
 		mapf_adapters::Graph get_graph(){	return g;	}
