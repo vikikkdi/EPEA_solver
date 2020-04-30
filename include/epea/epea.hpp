@@ -109,6 +109,14 @@ public:
         return agent_osf;
 	}
 
+	int list_of_locations_to_heuristic(std::vector<pair_1> locs){
+		int val = 0;
+		for(int i=0; i<locs.size(); i++){
+			val += h[i][locs[i].first][locs[i].second];
+		}
+		return val;
+	}
+
 };
 
 namespace EPEA{
