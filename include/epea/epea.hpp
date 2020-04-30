@@ -12,7 +12,56 @@
 
 #include <algorithm>
 
+#include <boost/heap/fibonacci_heap.hpp>
+
 typedef std::pair<int, int> pair_1;
+typedef std::tuple<int, int, int, int> priority_tuple;
+
+typedef struct pq_node
+{
+	std::vector<pair_1> agent_locs;
+	int g;
+	int h;
+	int small_f;
+	int big_f;
+	struct pq_node *parent;	
+
+	pq_node(std::vector<pair_1> a, int b, int c, int d, int e, struct pq_node* p){
+		agent_locs = a;
+		g = b;
+		h = c;
+		small_f = d;
+		big_f = e;
+		parent = p;
+	}
+} pq_node;
+
+typedef std::pair<priority_tuple, pq_node> heap_node;
+
+struct VectorHashByElements {
+public:
+	size_t operator()(const std::vector<pair_1> & v) const {
+		int size = v.size();
+		return std::hash<int>()(size);
+	}
+};
+
+struct VectorCompareByElements {
+public:
+	bool operator()(const std::vector<pair_1> & v1, const std::vector<pair_1> & v2) const {
+ 
+		if (v1.size() == v2.size()){
+			for(int i=0; i<v1.size(); i++){
+				if(v1[i].first == v2[i].first && v1[i].second == v2[i].second)	continue;
+				return false;
+			}
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+};
 
 template<typename Mapf>
 class OSF{
@@ -23,6 +72,7 @@ private:
 	int y;
 	Mapf obj;
 	std::vector<std::map<pair_1, std::vector<std::pair<pair_1, int> > > > agent_osfs;
+	
 public:
 	OSF(){}
 	OSF(Mapf mapf){	
@@ -33,6 +83,8 @@ public:
 		h = get_true_distance_heuristics();
 		agent_osfs = populate_agent_osf();
 	}
+
+	int get_size(){	return goals.size();	}
 
 	std::vector<std::vector<std::vector<int> > > get_true_distance_heuristics(){
 		std::vector<std::vector<std::vector<int> > > heu;
@@ -116,7 +168,29 @@ public:
 		}
 		return val;
 	}
+	std::pair<std::vector<std::vector<pair_1> >, int> get_children_and_next_F(pq_node current_node){
 
+	}
+
+	std::pair<std::vector<pair_1>, int> select_operators(pq_node node){
+		std::vector<pair_1> agent_locs = node.agent_locs;
+		int big_f = node.big_f;
+		int h = node.h;
+		int g = node.g;
+		int small_f = h + g;
+
+		int requested_row = big_f - small_f;
+
+	}
+
+};
+
+struct compare_node
+{
+    bool operator()(const heap_node & n1, const heap_node & n2) const
+    {
+        return n1.first > n2.first;
+    }
 };
 
 namespace EPEA{
@@ -126,6 +200,34 @@ namespace EPEA{
 		EPEAStar()	{}
 		bool search(Mapf mapf, std::vector<pair_1> starts, std::pair<int, std::vector<std::vector<pair_1> > > *solution){
 			OSF<Mapf> osf(mapf);
+			std::unordered_set<std::vector<pair_1>, VectorHashByElements, VectorCompareByElements> visited;
+
+			int mycounter = 0; //counter used to break ties in the priority queue
+			int g = 0;
+			int h = osf.list_of_locations_to_heuristic(starts);
+			int n_agents = osf.get_size();
+
+			pq_node start_node(starts, 0, h, g+h, g+h, NULL);
+
+			priority_tuple pq_tuple = {g+h, -g, h, mycounter};
+
+			boost::heap::fibonacci_heap<heap_node, boost::heap::compare<compare_node> > heap;
+			heap.push({pq_tuple, start_node});
+
+			mycounter += 1;
+			int nodes_expanded = 0;
+
+			while(!heap.empty()){
+				heap_node t = heap.top();
+				heap.pop();
+				priority_tuple pq_tuple = t.first;
+				pq_node current_node = t.second;
+
+				if(current_node.agent_locs == goals){
+					std::cout<<"PATH FOUND ENJOY, EPEA* WORK IS DONE(JUST OUTPUT CREATION IS REMAINING"<<std::endl;
+					return true;
+				}
+			}
 			return true;
 		}
 
