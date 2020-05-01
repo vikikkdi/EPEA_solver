@@ -68,18 +68,32 @@ class OSF{
 private:
 	std::vector<std::vector<std::vector<int> > > h;
 	std::vector<pair_1> goals;
+	std::vector<pair_1> obstacles;
+
+	std::vector<std::vector<bool> > temp_map;
+	std::vector<pair_1> op = {{0,0}, {-1,0}, {0,1}, {1,0}, {0,-1}};
+
 	int x;
 	int y;
 	Mapf obj;
 	std::vector<std::map<pair_1, std::vector<std::pair<pair_1, int> > > > agent_osfs;
-	
+
 public:
 	OSF(){}
 	OSF(Mapf mapf){	
 		obj = mapf;
 		goals = mapf.get_goals();
+		obstacles = mapf.get_obstacles();
 		x = mapf.get_x();
 		y = mapf.get_y();
+
+		temp_map.resize(x);
+		for(int i=0; i<x; i++)	temp_map[i].resize(y, false);
+
+		for(int i=0; i<obstacles.size(); i++){
+			temp_map[obstacles[i].first][obstacles[i].second] = true;
+		}
+
 		h = get_true_distance_heuristics();
 		agent_osfs = populate_agent_osf();
 	}
@@ -96,28 +110,33 @@ public:
 	}
 
 	std::vector<std::vector<int> > true_distance_bfs(pair_1 goal){
-		std::vector<std::vector<int> > b(x, std::vector<int>(y, 0));
-		std::deque<std::pair<pair_1, int> > q;
-		q.push_back({goal, 0});
+		std::vector<std::vector<int> > bfs_result(x, std::vector<int>(y, 0));
+		std::deque<pair_1> dq;
+		std::unordered_set<int> vis;
 
-		std::unordered_set<int> visited;
-		visited.insert((goal.first*y) + goal.second);
+		dq.push_back({(goal.first*y)+goal.second, 0});
+		vis.insert((goal.first*y)+goal.second);
 
-		while(!q.empty()){
-			std::pair<pair_1, int> node = q.front();
-			q.pop_front();
-			b[node.first.first][node.first.second] = node.second;
-			std::vector<pair_1> children = obj.get_graph().get_neighbor(node.first.first, node.first.second);
-			children.push_back(node.first);
+		while(!dq.empty()){
+			std::pair<int, int> a = dq.front();
+			dq.pop_front();
 
-			for(auto i:children){
-				if(visited.find((i.first*y) + i.second) == visited.end()){
-					visited.insert((i.first*y) + i.second);
-					q.push_back({i, node.second+1});
+			int x_val = a.first / y;
+			int y_val = a.first % y;
+
+			bfs_result[x_val][y_val] = a.second;
+
+			for(int i=0; i<op.size(); i++){
+				int new_x = x_val + op[i].first;
+				int new_y = y_val + op[i].second;
+
+				if(new_x >= 0 && new_x < x && new_y >=0 && new_y < y && temp_map[new_x][new_y] == false && vis.find((new_x*y)+new_y) == vis.end()){
+					vis.insert((new_x*y)+new_y);
+					dq.push_back({(new_x*y)+new_y, a.second+1});
 				}
 			}
 		}
-		return b;
+		return bfs_result;
 	}
 
 	int manhattan_distance(pair_1 a, pair_1 b){
@@ -135,7 +154,6 @@ public:
 	std::map<pair_1, std::vector<std::pair<pair_1, int> > > get_one_agent_osf(int agent_no){
 		std::map<pair_1, std::vector<std::pair<pair_1, int> > > agent_osf;
 
-		std::vector<pair_1> obstacles = obj.get_obstacles();
 		std::unordered_set<int> processed_obstacles;
 		for(auto it = obstacles.begin(); it != obstacles.end(); ++it){
 			int i = it->first;
@@ -148,11 +166,11 @@ public:
         	for(int j=0; j<y; j++){
         		std::vector<std::pair<pair_1, int> > good_ops;
         		if(processed_obstacles.find((i*y)+(j)) == processed_obstacles.end()){
-        			std::vector<pair_1> children = obj.get_graph().get_neighbor(i, j);
-        			children.push_back({i, j});
-        			for(auto it:children){
-        				pair_1 op = {it.first-i, it.second-j};
-        				good_ops.push_back({op, h[agent_no][it.first][it.second]});
+        			for(int t=0; t<op.size(); t++){
+        				int new_x = i + op[t].first;
+        				int new_y = j + op[t].second;
+        				if(new_x >= 0 && new_x < x && new_y >=0 && new_y < y && temp_map[new_x][new_y] == false)
+	        				good_ops.push_back({op[t], h[agent_no][new_x][new_y]});
         			}
         		}
         		agent_osf[{i, j}] = good_ops;
@@ -223,7 +241,7 @@ namespace EPEA{
 				priority_tuple pq_tuple = t.first;
 				pq_node current_node = t.second;
 
-				if(current_node.agent_locs == goals){
+				if(current_node.agent_locs == mapf.get_goals()){
 					std::cout<<"PATH FOUND ENJOY, EPEA* WORK IS DONE(JUST OUTPUT CREATION IS REMAINING"<<std::endl;
 					return true;
 				}

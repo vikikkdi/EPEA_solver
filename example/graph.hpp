@@ -73,6 +73,11 @@ namespace mapf_adapters{
 			}
 			return temp;
 		}
+
+		std::vector<int> get_neighbor(int xy){
+			return adjacency_list[xy];
+		}
+
 	private:
 		std::vector< std::vector< int > > adjacency_list;
 		int x_dim, y_dim;
