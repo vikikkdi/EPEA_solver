@@ -462,7 +462,6 @@ namespace EPEA{
 					mycounter++;
 				}
 				nodes_expanded++;
-				std::cout<<nodes_expanded<<std::endl;
 			}
 			return false;
 		}
