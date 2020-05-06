@@ -267,13 +267,13 @@ public:
 		}
 		for(int i=0; i<this_locs.size(); i++){
 			if(this_locs[i] != next_locs[i]){
-				forward.push_back({next_locs[i], this_locs[i]});
+				backward.push_back({next_locs[i], this_locs[i]});
 			}
 		}
 
 		std::set<std::pair<pair_1, pair_1> > set_forward(forward.begin(), forward.end());
 		std::set<std::pair<pair_1, pair_1> > set_backward(backward.begin(), backward.end());
-
+		
 		std::vector<std::pair<pair_1, pair_1>> common_data;
 		std::set_intersection(set_forward.begin(), set_forward.end(), set_backward.begin(), set_backward.end(), std::back_inserter(common_data));
 		return common_data.size() > 0;
@@ -378,7 +378,7 @@ public:
 		int delta_big_F_next = get_delta_big_F_next(op_table, requested_row);
 
         int next_big_F = small_f + delta_big_F_next;
-        if(op_table[requested_row].is_data_present == false){
+        if(requested_row > op_table.size() || op_table[requested_row].is_data_present == false){
         	return {std::vector<std::vector<pair_1> >(), next_big_F};
         }
 
@@ -439,7 +439,6 @@ namespace EPEA{
 					find_solution(current_node, mapf.get_goals(), solution);
 					return true;
 				}
-
 				std::pair<std::vector<std::vector<pair_1> >, int> temp = osf.get_children_and_next_F(current_node);
 				std::vector<std::vector<pair_1> > new_child_nodes = temp.first;
 				int next_big_f = temp.second;
@@ -463,6 +462,7 @@ namespace EPEA{
 					mycounter++;
 				}
 				nodes_expanded++;
+				std::cout<<nodes_expanded<<std::endl;
 			}
 			return false;
 		}
