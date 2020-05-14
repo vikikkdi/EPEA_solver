@@ -421,7 +421,7 @@ namespace EPEA{
 
 			pq_node *start_node = new pq_node(starts, 0, h, g+h, g+h, NULL);
 
-			priority_tuple pq_tuple = {g+h, -g, h, mycounter};
+			priority_tuple pq_tuple = std::make_tuple(g+h, -g, h, mycounter);
 
 			boost::heap::fibonacci_heap<heap_node, boost::heap::compare<compare_node> > heap;
 			heap.push({pq_tuple, start_node});
@@ -447,7 +447,7 @@ namespace EPEA{
 					pq_node *child_node = get_child_node(child, current_node, osf);
 					if(visited.find(child) == visited.end()){
 						visited.insert(child);
-						pq_tuple = {child_node->big_f, child_node->h, -child_node->g, mycounter};
+						pq_tuple = std::make_tuple(child_node->big_f, child_node->h, -child_node->g, mycounter);
 						heap.push({pq_tuple, child_node});
 						mycounter++;
 					}
@@ -457,7 +457,7 @@ namespace EPEA{
 					visited.insert(current_node->agent_locs);
 				}else{
 					current_node->big_f = next_big_f;
-					pq_tuple = {current_node->big_f, current_node->h, -current_node->g, mycounter};
+					pq_tuple = std::make_tuple(current_node->big_f, current_node->h, -current_node->g, mycounter);
 					heap.push({pq_tuple, current_node});
 					mycounter++;
 				}
