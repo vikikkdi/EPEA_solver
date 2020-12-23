@@ -10,7 +10,7 @@ target_include_directories(
   epea
   INTERFACE 
   include 
-  library/yaml-cpp/include
+  #library/yaml-cpp/include
 )
 
 add_executable(
